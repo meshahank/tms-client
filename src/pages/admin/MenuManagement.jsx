@@ -83,8 +83,10 @@ export default function MenuManagement() {
         <section className="space-y-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-primary">Menu Management</p>
-              <h1 className="font-display text-4xl font-black text-brand-dark">Split available and active items</h1>
+              <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-primary">Menu</p>
+              <h1 className="font-display text-4xl font-black text-brand-dark">
+                <span className="text-brand-dark">Available</span> <span className="text-brand-muted">·</span> <span className="text-brand-primary">Selected</span>
+              </h1>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Card className="p-4">
@@ -162,6 +164,12 @@ function MenuColumn({ title, icon: Icon, items, actionLabel, onAction, removeMod
           </div>
         ))}
       </div>
+
+      {!items.length && (
+        <Card className="border-dashed p-6 text-center text-sm text-brand-muted">
+          No {title.toLowerCase()} items
+        </Card>
+      )}
     </Card>
   )
 }
@@ -169,24 +177,32 @@ function MenuColumn({ title, icon: Icon, items, actionLabel, onAction, removeMod
 function MenuCreateCard({ onCreate }) {
   const [name, setName] = useState('')
   const [image, setImage] = useState('')
+  const [price, setPrice] = useState('')
 
   function handleSubmit(event) {
     event.preventDefault()
     if (!name.trim()) return
-    onCreate({ name: name.trim(), image: image.trim() || undefined, isActive: false })
+    onCreate({ 
+      name: name.trim(), 
+      image: image.trim() || undefined, 
+      price: Number(price) || 10,
+      isActive: false 
+    })
     setName('')
     setImage('')
+    setPrice('')
   }
 
   return (
-    <Card className="space-y-4">
+    <Card className="space-y-4 p-6">
       <div>
         <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-primary">Create item</p>
         <h2 className="font-display text-2xl font-black text-brand-dark">Add a new menu card</h2>
       </div>
-      <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+      <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-[1fr_1fr_0.5fr_auto] md:items-end">
         <InputField label="Name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Masala Tea" />
         <InputField label="Image URL" value={image} onChange={(event) => setImage(event.target.value)} placeholder="https://..." />
+        <InputField label="Price" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="10" type="number" min="0" />
         <Button type="submit">
           <Plus size={14} />
           Add item

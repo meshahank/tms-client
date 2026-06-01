@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Download, FileUp, Plus, PencilLine, Trash2, Search } from 'lucide-react'
+import { Download, FileUp, Plus, PencilLine, Trash2, Search, Wallet, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AdminNavbar from '../../components/layout/AdminNavbar'
 import Footer from '../../components/layout/Footer'
@@ -9,20 +9,24 @@ import Card from '../../components/ui/Card'
 import InputField from '../../components/ui/InputField'
 import Badge from '../../components/ui/Badge'
 import StudentTable from '../../components/tables/StudentTable'
+import RechargeModal from '../../components/ui/RechargeModal'
 import { useStudents } from '../../hooks/useStudents'
 import { CLASS_CODES } from '../../lib/constants'
 import { currencyLabel, formatClass } from '../../lib/formatters'
-import { parseStudentExcel } from '../../utils/excelUtils'
+import { parseStudentExcel, parseBulkRechargeExcel } from '../../utils/excelUtils'
 import { studentsApi } from '../../api/students'
 
-const emptyForm = { admissionNumber: '', name: '', class: '1A', balance: 0 }
+const emptyForm = { admissionNumber: '', name: '', class: '1A', balance: 0, dailyLimit: '' }
 
 export default function AdminStudents() {
   const queryClient = useQueryClient()
   const fileInputRef = useRef(null)
+  const bulkRechargeInputRef = useRef(null)
   const [search, setSearch] = useState('')
+  const [classFilter, setClassFilter] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState(null)
+  const [rechargeStudent, setRechargeStudent] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const { data = [], isLoading } = useStudents()
 
@@ -65,18 +69,48 @@ export default function AdminStudents() {
     onError: (error) => toast.error(error.response?.data?.error || 'Import failed'),
   })
 
+  const rechargeMutation = useMutation({
+    mutationFn: ({ id, amount, note }) => studentsApi.recharge(id, amount, note),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['students'] })
+      toast.success('Balance recharged')
+      setRechargeStudent(null)
+    },
+    onError: (error) => toast.error(error.response?.data?.error || 'Recharge failed'),
+  })
+
+  const bulkRechargeMutation = useMutation({
+    mutationFn: (rows) => studentsApi.bulkRecharge(rows),
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({ queryKey: ['students'] })
+      const { recharged = 0, notFound = 0 } = response.data || {}
+      toast.success(`Recharged ${recharged} students, ${notFound} not found`)
+    },
+    onError: (error) => toast.error(error.response?.data?.error || 'Bulk recharge failed'),
+  })
+
   const filteredStudents = useMemo(() => {
+    let result = data
+    
+    if (classFilter) {
+      result = result.filter((student) => student.class === classFilter)
+    }
+    
     const term = search.trim().toLowerCase()
-    if (!term) return data
-    return data.filter((student) =>
-      [student.admissionNumber, student.name, student.class].some((value) => String(value ?? '').toLowerCase().includes(term)),
-    )
-  }, [data, search])
+    if (term) {
+      result = result.filter((student) =>
+        [student.admissionNumber, student.name, student.class].some((value) => String(value ?? '').toLowerCase().includes(term)),
+      )
+    }
+    
+    return result
+  }, [data, search, classFilter])
 
   const columns = useMemo(
     () => [
       { accessorKey: 'index', header: 'Roll', cell: (info) => info.row.index + 1 },
       { accessorKey: 'name', header: 'Name', cell: (info) => <span className="font-semibold">{info.getValue()}</span> },
+      { accessorKey: 'admissionNumber', header: 'Adm. No' },
       {
         accessorKey: 'balance',
         header: 'Balance',
@@ -87,11 +121,20 @@ export default function AdminStudents() {
         accessorKey: 'actions',
         header: 'Actions',
         cell: (info) => (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="rounded-full p-2 text-brand-success transition hover:bg-brand-success/10"
+              onClick={() => setRechargeStudent(info.row.original)}
+              title="Recharge"
+            >
+              <Wallet size={15} />
+            </button>
             <button
               type="button"
               className="rounded-full p-2 text-brand-primary transition hover:bg-brand-primaryTint"
               onClick={() => openEditModal(info.row.original)}
+              title="Edit"
             >
               <PencilLine size={15} />
             </button>
@@ -101,6 +144,7 @@ export default function AdminStudents() {
               onClick={() => {
                 if (window.confirm('Delete this student permanently?')) deleteMutation.mutate(info.row.original._id)
               }}
+              title="Delete"
             >
               <Trash2 size={15} />
             </button>
@@ -125,6 +169,7 @@ export default function AdminStudents() {
         name: student.name ?? '',
         class: student.class ?? '1A',
         balance: student.balance ?? 0,
+        dailyLimit: student.dailyLimit ?? '',
       })
     } else {
       setEditingStudent(null)
@@ -141,6 +186,19 @@ export default function AdminStudents() {
       importMutation.mutate(rows)
     } catch {
       toast.error('Could not parse the Excel file')
+    } finally {
+      event.target.value = ''
+    }
+  }
+
+  async function handleBulkRechargeChange(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    try {
+      const rows = await parseBulkRechargeExcel(file)
+      bulkRechargeMutation.mutate(rows)
+    } catch {
+      toast.error('Could not parse the bulk recharge file')
     } finally {
       event.target.value = ''
     }
@@ -167,10 +225,18 @@ export default function AdminStudents() {
       name: form.name.trim(),
       class: form.class,
       balance: Number(form.balance || 0),
+      dailyLimit: form.dailyLimit ? Number(form.dailyLimit) : null,
     }
 
     if (editingStudent) {
-      updateMutation.mutate({ id: editingStudent._id, payload: { name: payload.name, class: payload.class } })
+      updateMutation.mutate({ 
+        id: editingStudent._id, 
+        payload: { 
+          name: payload.name, 
+          class: payload.class,
+          dailyLimit: payload.dailyLimit,
+        } 
+      })
       return
     }
 
@@ -185,38 +251,55 @@ export default function AdminStudents() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-primary">Students</p>
-              <h1 className="font-display text-4xl font-black text-brand-dark">Student inventory and balance control</h1>
+              <h1 className="font-display text-4xl font-black text-brand-dark">Student roster and balances</h1>
             </div>
             <div className="flex flex-wrap gap-3">
               <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
+              <input ref={bulkRechargeInputRef} type="file" accept=".xlsx,.xls" onChange={handleBulkRechargeChange} className="hidden" />
               <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
                 <FileUp size={14} />
-                Import Excel
+                Import
               </Button>
               <Button variant="secondary" onClick={handleExport}>
                 <Download size={14} />
-                Export Excel
+                Export
+              </Button>
+              <Button variant="secondary" onClick={() => bulkRechargeInputRef.current?.click()}>
+                <Upload size={14} />
+                Bulk Recharge
               </Button>
               <Button onClick={() => openEditModal()}>
                 <Plus size={14} />
-                Add Student
+                Add
               </Button>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <InputField value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search student, class, adm. no" prefix={<Search size={14} />} />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <InputField 
+              value={search} 
+              onChange={(event) => setSearch(event.target.value)} 
+              placeholder="Search..." 
+              prefix={<Search size={14} />}
+              className="xl:col-span-2"
+            />
+            <select
+              className="focus-ring rounded-full border border-brand-border bg-white/90 px-4 py-3 text-sm shadow-sm"
+              value={classFilter}
+              onChange={(e) => setClassFilter(e.target.value)}
+            >
+              <option value="">All classes</option>
+              {CLASS_CODES.map((code) => (
+                <option key={code} value={code}>{code}</option>
+              ))}
+            </select>
             <Card className="p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-muted">Total students</p>
-              <p className="mt-2 text-3xl font-black text-brand-dark">{filteredStudents.length}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-muted">Total</p>
+              <p className="mt-1 text-2xl font-black text-brand-dark">{filteredStudents.length}</p>
             </Card>
             <Card className="p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-muted">Negative balances</p>
-              <p className="mt-2 text-3xl font-black text-brand-danger">{filteredStudents.filter((student) => Number(student.balance) < 0).length}</p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-muted">Class codes</p>
-              <p className="mt-2 text-3xl font-black text-brand-dark">{CLASS_CODES.length}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-muted">Debtors</p>
+              <p className="mt-1 text-2xl font-black text-brand-danger">{filteredStudents.filter((s) => Number(s.balance) < 0).length}</p>
             </Card>
           </div>
 
@@ -270,6 +353,15 @@ export default function AdminStudents() {
                   onChange={(event) => setForm((current) => ({ ...current, balance: event.target.value }))}
                   placeholder="0"
                   type="number"
+                  disabled={Boolean(editingStudent)}
+                />
+                <InputField
+                  label="Daily limit (optional)"
+                  value={form.dailyLimit}
+                  onChange={(event) => setForm((current) => ({ ...current, dailyLimit: event.target.value }))}
+                  placeholder="Leave empty for no limit"
+                  type="number"
+                  className="md:col-span-2"
                 />
 
                 <div className="md:col-span-2 flex justify-end gap-3 pt-2">
@@ -279,6 +371,15 @@ export default function AdminStudents() {
               </form>
             </Card>
           </div>
+        ) : null}
+
+        {rechargeStudent ? (
+          <RechargeModal
+            student={rechargeStudent}
+            onClose={() => setRechargeStudent(null)}
+            onSubmit={({ amount, note }) => rechargeMutation.mutate({ id: rechargeStudent._id, amount, note })}
+            isLoading={rechargeMutation.isPending}
+          />
         ) : null}
       </main>
       <Footer />

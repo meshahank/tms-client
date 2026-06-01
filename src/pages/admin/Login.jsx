@@ -44,25 +44,47 @@ export default function Login() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-brand-primaryTint text-brand-primary">
               <KeyRound size={26} />
             </div>
-            <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-muted">Admin access</p>
-            <h1 className="mt-2 font-display text-4xl font-black text-brand-dark">Teapetti</h1>
-            <p className="mt-2 text-sm text-brand-muted">Login to manage students, menu items, and sales.</p>
+            <h1 className="font-display text-3xl font-black text-brand-dark">
+              <span className="text-brand-primary">Tea</span>petti
+            </h1>
+            <p className="mt-2 text-sm text-brand-muted">Admin login to manage the shop</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <InputField label="Username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="admin" autoComplete="username" />
-            <InputField label="Password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" type="password" autoComplete="current-password" />
+            <InputField 
+              label="Username" 
+              value={username} 
+              onChange={(event) => setUsername(event.target.value)} 
+              placeholder="admin" 
+              autoComplete="username" 
+            />
+            <InputField 
+              label="Password" 
+              value={password} 
+              onChange={(event) => setPassword(event.target.value)} 
+              placeholder="Enter password" 
+              type="password" 
+              autoComplete="current-password" 
+            />
 
-            {error ? <p className="rounded-2xl border border-brand-danger/20 bg-brand-danger/8 px-4 py-3 text-sm font-medium text-brand-danger">{error}</p> : null}
+            {error ? (
+              <p className="rounded-2xl border border-brand-danger/20 bg-brand-danger/8 px-4 py-3 text-sm font-medium text-brand-danger">
+                {error}
+              </p>
+            ) : null}
 
             <div className="flex gap-3 pt-2">
-              <Button type="button" variant="secondary" className="flex-1" onClick={() => {
-                setUsername('')
-                setPassword('')
-                setError('')
-              }}>
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => {
+                  setUsername('')
+                  setPassword('')
+                  setError('')
+                }}
+              >
                 <Trash2 size={14} />
-                Clear
+                Del
               </Button>
               <Button type="submit" className="flex-1" disabled={loading}>
                 {loading ? 'Signing in...' : 'Login'}

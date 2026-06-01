@@ -1,6 +1,7 @@
 import Button from './Button'
 import Card from './Card'
 import Badge from './Badge'
+import { currencyLabel } from '../../lib/formatters'
 
 const fallbackImage =
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=900&q=80'
@@ -15,11 +16,15 @@ export default function MenuItemCard({ item, action, actionLabel, compact = fals
           onError={(event) => {
             event.currentTarget.src = fallbackImage
           }}
+          crossOrigin="anonymous"
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/18 to-transparent" />
         <div className="absolute left-3 top-3 flex gap-2">
           <Badge className="bg-white/90 text-[10px] tracking-[0.22em] text-brand-dark">Teapetti</Badge>
+          {item.price !== undefined && item.price !== null && (
+            <Badge className="bg-brand-primary text-white">{currencyLabel(item.price)}</Badge>
+          )}
         </div>
         <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 text-white">
           <div>
@@ -32,7 +37,11 @@ export default function MenuItemCard({ item, action, actionLabel, compact = fals
       <div className={`flex items-center justify-between gap-3 px-4 ${compact ? 'pt-3' : 'py-4'}`}>
         <div>
           <p className="text-sm font-semibold text-brand-dark">{item.name}</p>
-          <p className="text-xs text-brand-muted">Campus favorite</p>
+          {item.price !== undefined && item.price !== null ? (
+            <p className="text-xs font-bold text-brand-primary">{currencyLabel(item.price)}</p>
+          ) : (
+            <p className="text-xs text-brand-muted">Campus favorite</p>
+          )}
         </div>
         {action ? (
           <Button size="sm" variant={actionLabel?.toLowerCase().includes('remove') ? 'danger' : 'success'} onClick={action}>
