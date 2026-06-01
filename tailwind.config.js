@@ -17,8 +17,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui'],
-        display: ['"Syne"', 'ui-sans-serif', 'system-ui'],
+        sans: ['"Inter"', 'ui-sans-serif', 'system-ui'],
+        display: ['"Bricolage Grotesque"', 'ui-sans-serif', 'system-ui'],
       },
       borderRadius: {
         xl2: '1.25rem',

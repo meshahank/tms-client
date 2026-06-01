@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { ChartColumnBig, MenuSquare, ShoppingBag, Users, FileText, AlertTriangle } from 'lucide-react'
+import { MenuSquare, ShoppingBag, Users, FileText, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import AdminNavbar from '../../components/layout/AdminNavbar'
 import Footer from '../../components/layout/Footer'
-import Card from '../../components/ui/Card'
-import Button from '../../components/ui/Button'
 import GradientBlob from '../../components/ui/GradientBlob'
 import DailySummaryCard from '../../components/ui/DailySummaryCard'
 import ItemSalesChart from '../../components/ui/ItemSalesChart'
@@ -22,13 +20,17 @@ export default function AdminHome() {
   const { data: dailySummary, isLoading: summaryLoading } = useDailySummary()
   const { data: analytics, isLoading: analyticsLoading } = useItemAnalytics(analyticsRange)
 
-  const debtors = students.filter(s => Number(s.balance) < 0)
+  const debtors = students.filter((s) => Number(s.balance) < 0)
 
   const metrics = [
     { label: 'Students', value: students.length, icon: Users },
-    { label: 'Active menu', value: menuItems.filter((item) => item.isActive).length, icon: MenuSquare },
+    { label: 'Active menu', value: menuItems.filter((i) => i.isActive).length, icon: MenuSquare },
     { label: 'Debtors', value: debtors.length, icon: AlertTriangle, danger: debtors.length > 0 },
-    { label: 'Total balance', value: currencyLabel(students.reduce((sum, student) => sum + Number(student.balance ?? 0), 0)), icon: ShoppingBag },
+    {
+      label: 'Total balance',
+      value: currencyLabel(students.reduce((sum, s) => sum + Number(s.balance ?? 0), 0)),
+      icon: ShoppingBag,
+    },
   ]
 
   const features = [
@@ -41,82 +43,94 @@ export default function AdminHome() {
   return (
     <div className="min-h-screen">
       <AdminNavbar />
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/70 p-6 shadow-soft backdrop-blur-xl md:p-10">
-          <GradientBlob className="left-[-3rem] top-[-2rem] h-56 w-56" />
-          <GradientBlob className="right-[-2rem] top-6 h-64 w-64" />
-          <div className="relative space-y-8">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-primary">Admin Dashboard</p>
-              <h1 className="mt-2 font-display text-5xl font-black text-brand-dark">Operate the shop with clarity</h1>
-            </div>
 
-            <DailySummaryCard data={dailySummary} isLoading={summaryLoading} />
+      <main className="relative mx-auto max-w-7xl px-6 py-12">
+        <GradientBlob className="left-[-4rem] top-0 h-64 w-64 opacity-40" />
+        <GradientBlob className="right-[-3rem] top-10 h-56 w-56 opacity-30" />
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {metrics.map((metric) => {
-                const Icon = metric.icon
-                return (
-                  <Card key={metric.label} className="p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-muted">{metric.label}</p>
-                        <p className={`mt-3 text-3xl font-black ${metric.danger ? 'text-brand-danger' : 'text-brand-dark'}`}>{metric.value}</p>
-                      </div>
-                      <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${metric.danger ? 'bg-brand-danger/10 text-brand-danger' : 'bg-brand-primaryTint text-brand-primary'}`}>
-                        <Icon size={20} />
-                      </span>
-                    </div>
-                  </Card>
-                )
-              })}
-            </div>
+        <div className="relative space-y-10">
+          {/* Header */}
+          <div>
+            <h1 className="font-display text-5xl font-black text-brand-dark leading-tight">
+              Admin<br />Features
+            </h1>
+          </div>
 
-            <div className="grid gap-6 xl:grid-cols-2">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-muted">Quick Actions</p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {features.map((feature) => {
-                    const Icon = feature.icon
-                    return (
-                      <Card key={feature.label} className="group cursor-pointer p-0 transition duration-300 hover:-translate-y-1 hover:shadow-float" onClick={() => navigate(feature.path)}>
-                        <div className="flex h-28 flex-col justify-between rounded-card bg-gradient-to-br from-brand-primaryTint via-white to-white p-5">
-                          <Icon size={24} className="text-brand-primary" />
-                          <div>
-                            <p className="text-lg font-black text-brand-dark">{feature.label}</p>
-                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-muted">{feature.description}</p>
-                          </div>
-                        </div>
-                      </Card>
-                    )
-                  })}
-                </div>
-              </div>
+          {/* Daily summary */}
+          <DailySummaryCard data={dailySummary} isLoading={summaryLoading} />
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-sm font-bold uppercase tracking-[0.24em] text-brand-muted">Sales Analytics</p>
-                  <div className="flex gap-2">
-                    {['week', 'month'].map((range) => (
-                      <Button
-                        key={range}
-                        variant={analyticsRange === range ? 'primary' : 'secondary'}
-                        size="sm"
-                        onClick={() => setAnalyticsRange(range)}
-                      >
-                        {range === 'week' ? 'Week' : 'Month'}
-                      </Button>
-                    ))}
+          {/* Metric tiles */}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {metrics.map((m) => {
+              const Icon = m.icon
+              return (
+                <div
+                  key={m.label}
+                  className="rounded-[1.4rem] bg-white border border-black/[0.07] shadow-sm p-5 flex items-start justify-between gap-3"
+                >
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-muted">{m.label}</p>
+                    <p className={`mt-2.5 text-3xl font-black ${m.danger ? 'text-brand-danger' : 'text-brand-dark'}`}>{m.value}</p>
                   </div>
+                  <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${m.danger ? 'bg-brand-danger/10 text-brand-danger' : 'bg-brand-primaryTint text-brand-primary'}`}>
+                    <Icon size={18} />
+                  </span>
                 </div>
-                <ItemSalesChart data={analytics} isLoading={analyticsLoading} range={analyticsRange} />
+              )
+            })}
+          </div>
+
+          {/* Quick actions + chart */}
+          <div className="grid gap-8 xl:grid-cols-2">
+            {/* Quick actions */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-muted mb-4">Quick Actions</p>
+              <div className="grid grid-cols-2 gap-3">
+                {features.map((f) => {
+                  const Icon = f.icon
+                  return (
+                    <button
+                      key={f.label}
+                      onClick={() => navigate(f.path)}
+                      className="group rounded-[1.4rem] bg-gradient-to-br from-brand-primaryTint/70 via-white to-white border border-black/[0.06] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-28 flex flex-col justify-between p-5 text-left"
+                    >
+                      <Icon size={22} className="text-brand-primary" />
+                      <div>
+                        <p className="text-base font-black text-brand-dark">{f.label}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-muted">{f.description}</p>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
+            </div>
+
+            {/* Sales analytics */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-muted">Sales Analytics</p>
+                <div className="flex gap-1">
+                  {['week', 'month'].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setAnalyticsRange(r)}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                        analyticsRange === r
+                          ? 'bg-brand-primary text-white'
+                          : 'bg-black/[0.05] text-brand-muted hover:bg-black/[0.09]'
+                      }`}
+                    >
+                      {r === 'week' ? 'Week' : 'Month'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <ItemSalesChart data={analytics} isLoading={analyticsLoading} range={analyticsRange} />
             </div>
           </div>
-        </section>
+        </div>
       </main>
+
       <Footer />
     </div>
   )
