@@ -4,6 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* Shorthand aliases used across pages */
+        tea: {
+          DEFAULT: '#184D47',
+          dark:    '#123a35',
+          light:   '#EBF4F3',
+        },
+        surface: {
+          DEFAULT: '#F7F3EE',
+          subtle:  '#F0EBE3',
+          border:  'rgba(24,77,71,0.10)',
+          muted:   '#7A9490',
+          dark:    '#1A2421',
+        },
         brand: {
           // Core palette
           green:       '#184D47',
