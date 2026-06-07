@@ -1,38 +1,24 @@
 import { NavLink, Link } from 'react-router-dom'
 
-const LINKS = [
-  { to: '/',         label: 'Home',    end: true },
-  { to: '/students', label: 'Students'           },
-  { to: '/classes',  label: 'Classes'            },
-  { to: '/menu',     label: 'Menu'               },
-]
+const linkClass = ({ isActive }) =>
+  `px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
+    isActive
+      ? 'bg-brand-primary text-white'
+      : 'text-brand-dark/70 hover:text-brand-dark'
+  }`
 
 export default function UserNavbar() {
   return (
-    <header className="sticky top-0 z-40 bg-brand-beige/90 backdrop-blur-md border-b border-brand-border">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 h-[54px]">
-        <Link
-          to="/"
-          className="font-display text-[15px] font-bold text-brand-dark tracking-tight"
-        >
-          <span className="text-brand-amber">Tea</span>petti
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-black/[0.06]">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+        <Link to="/" className="font-display text-base font-bold text-brand-dark tracking-tight">
+          <span className="text-brand-primary">Tea</span>petti
         </Link>
-
-        <nav className="flex items-center gap-0.5">
-          {LINKS.map(({ to, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                isActive
-                  ? 'rounded-full bg-brand-amber px-3.5 py-1 text-[13px] font-semibold text-brand-ink'
-                  : 'rounded-full px-3.5 py-1 text-[13px] font-medium text-brand-mid transition-colors hover:text-brand-dark'
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
+        <nav className="flex items-center gap-1">
+          <NavLink to="/" className={linkClass} end>Home</NavLink>
+          <NavLink to="/students" className={linkClass}>Students</NavLink>
+          <NavLink to="/classes" className={linkClass}>Classes</NavLink>
+          <NavLink to="/menu" className={linkClass}>Menu</NavLink>
         </nav>
       </div>
     </header>

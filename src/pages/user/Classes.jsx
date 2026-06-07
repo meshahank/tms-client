@@ -1,40 +1,35 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import UserNavbar from '../../components/layout/UserNavbar'
 import Footer from '../../components/layout/Footer'
 import GradientBlob from '../../components/ui/GradientBlob'
 import { CLASS_CODES } from '../../lib/constants'
 
 export default function Classes() {
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen">
       <UserNavbar />
 
-      <main className="relative mx-auto max-w-5xl px-6 pt-14 pb-20">
-        <GradientBlob className="left-[-8rem] top-[-4rem] h-96 w-96 opacity-50" />
-        <GradientBlob className="right-[-6rem] bottom-0 h-72 w-72 opacity-35" amber />
+      <main className="relative mx-auto max-w-6xl px-6 py-12">
+        <GradientBlob className="left-[-4rem] top-0 h-64 w-64 opacity-40" />
+        <GradientBlob className="right-[-3rem] bottom-0 h-56 w-56 opacity-30" />
 
-        <div className="relative animate-page">
-          <h1 className="font-display text-5xl sm:text-6xl font-extrabold text-brand-dark mb-10">
-            Classes
-          </h1>
+        <div className="relative">
+          <h1 className="font-display text-5xl font-black text-brand-dark mb-8">Classes</h1>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {CLASS_CODES.map((code) => (
-              <Link
+              <button
                 key={code}
-                to={`/classes/${encodeURIComponent(code)}`}
-                className="group card card-hover flex flex-col justify-between p-4 h-28"
+                onClick={() => navigate(`/classes/${code}`)}
+                className="group relative overflow-hidden rounded-[1.4rem] bg-white border border-black/[0.07] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-28 flex flex-col justify-between p-4"
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-subtle">
-                  Class
-                </span>
-                <div>
-                  <p className="font-display text-2xl font-extrabold text-brand-dark leading-none group-hover:text-brand-green transition-colors">
-                    {code}
-                  </p>
-                  <p className="text-[10px] text-brand-muted mt-1">View roster</p>
-                </div>
-              </Link>
+                {/* Subtle orange corner accent */}
+                <div className="absolute right-0 top-0 h-14 w-14 rounded-bl-[2rem] bg-gradient-to-br from-brand-primaryTint to-transparent opacity-70" />
+                <p className="font-display text-3xl font-black text-brand-dark leading-none">{code}</p>
+                <div className="h-[3px] w-10 rounded-full bg-gradient-to-r from-brand-primarySoft to-brand-primary transition-all duration-300 group-hover:w-14" />
+              </button>
             ))}
           </div>
         </div>

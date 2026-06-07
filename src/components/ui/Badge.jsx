@@ -1,13 +1,3 @@
-export default function Badge({ variant = 'green', className = '', children }) {
-  const v = {
-    green: 'badge-green',
-    amber: 'badge-amber',
-    red:   'badge-red',
-    muted: 'badge-muted',
-  }
-  return (
-    <span className={`badge ${v[variant] ?? v.green} ${className}`}>
-      {children}
-    </span>
-  )
+export default function Badge({ className = '', children }) {
+  return <span className={`badge-chip inline-flex items-center rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] ${className}`}>{children}</span>
 }
