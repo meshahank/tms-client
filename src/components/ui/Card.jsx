@@ -1,6 +1,9 @@
-export default function Card({ className = '', children, ...props }) {
+export default function Card({ className = '', hover = false, children, ...props }) {
   return (
-    <div className={`surface-panel rounded-card p-5 ${className}`} {...props}>
+    <div
+      className={`card ${hover ? 'card-hover cursor-pointer' : ''} ${className}`}
+      {...props}
+    >
       {children}
     </div>
   )

@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Search, RefreshCw } from 'lucide-react'
+import { Search, RefreshCw, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import UserNavbar from '../../components/layout/UserNavbar'
 import Footer from '../../components/layout/Footer'
-import Badge from '../../components/ui/Badge'
 import GradientBlob from '../../components/ui/GradientBlob'
 import HistoryTable from '../../components/tables/HistoryTable'
 import { useStudentLookup } from '../../hooks/useStudentLookup'
@@ -11,132 +10,159 @@ import { MONTH_OPTIONS } from '../../lib/constants'
 import { currencyLabel, formatClass } from '../../lib/formatters'
 
 export default function Students() {
-  const [query, setQuery] = useState('')
-  const [submitted, setSubmitted] = useState('')
-  const [months, setMonths] = useState(12)
-  const [validationError, setValidationError] = useState('')
+  const [query, setQuery]           = useState('')
+  const [submitted, setSubmitted]   = useState('')
+  const [months, setMonths]         = useState(12)
+  const [validationError, setVErr]  = useState('')
 
   const studentQuery = useStudentLookup(submitted)
+  const student      = studentQuery.data
 
   const historyRows = useMemo(() => {
-    const history = studentQuery.data?.history ?? []
+    const history = student?.history ?? []
     return buildHistoryRows(getHistoryWindow(history, months))
-  }, [studentQuery.data?.history, months])
+  }, [student?.history, months])
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const admNo = query.trim()
-    if (!admNo) { setValidationError('Enter an admission number.'); return }
-    setValidationError('')
+    if (!admNo) { setVErr('Enter an admission number.'); return }
+    setVErr('')
     setSubmitted(admNo)
   }
 
-  const student = studentQuery.data
+  const isNegative = student && Number(student.balance) < 0
 
   return (
     <div className="min-h-screen">
       <UserNavbar />
 
-      {/* Search section — no outer card */}
+      {/* Search hero */}
       <section className="relative overflow-hidden py-16 text-center">
-        <GradientBlob className="left-[-5rem] top-[-2rem] h-72 w-72 opacity-50" />
-        <GradientBlob className="right-[-4rem] bottom-0 h-64 w-64 opacity-35" />
+        <GradientBlob className="left-[-6rem] top-[-2rem] h-80 w-80 opacity-70" />
+        <GradientBlob className="right-[-5rem] bottom-0 h-72 w-72 opacity-50" amber />
 
-        <div className="relative mx-auto max-w-2xl px-6">
-          <h1 className="font-display font-black leading-[0.9] mb-10">
-            <span className="block text-5xl sm:text-6xl text-brand-dark">Search</span>
-            <span className="block text-5xl sm:text-6xl text-brand-primary">Students</span>
+        <div className="relative mx-auto max-w-xl px-6 animate-page">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-brand-green mb-3">Student Lookup</p>
+          <h1 className="font-display font-extrabold leading-[0.9] mb-8">
+            <span className="block text-[3.2rem] sm:text-[4rem] text-brand-dark">Search</span>
+            <span className="block text-[3.2rem] sm:text-[4rem] text-brand-green">Students</span>
           </h1>
 
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex gap-2 max-w-sm mx-auto">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter your Ad no..."
-              className="flex-1 rounded-full border border-black/10 bg-white/90 px-5 py-3 text-sm font-medium text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 shadow-sm"
+              placeholder="Enter admission number..."
+              className="input-base focus-ring flex-1 rounded-xl"
             />
             <button
               type="submit"
-              className="h-11 w-11 shrink-0 flex items-center justify-center rounded-full bg-brand-primary text-white hover:bg-brand-primary/90 transition-colors shadow-sm"
+              className="btn btn-primary h-[42px] w-[42px] rounded-xl shrink-0 !p-0 flex items-center justify-center"
             >
               <Search size={16} />
             </button>
           </form>
 
           {(validationError || studentQuery.isError) && (
-            <p className="mt-3 text-sm text-brand-danger font-medium">
+            <p className="mt-3 text-sm text-brand-danger">
               {validationError || 'No student found for that admission number.'}
             </p>
           )}
         </div>
       </section>
 
-      {/* Student profile — a single clean card */}
-      {studentQuery.isSuccess && student ? (
-        <section className="mx-auto max-w-2xl px-6 pb-16">
-          <div className="rounded-[1.5rem] bg-white border border-black/[0.07] shadow-soft overflow-hidden">
-            {/* Header row */}
-            <div className="flex items-start justify-between gap-6 p-6">
-              <div className="space-y-3 flex-1">
+      {/* Student profile */}
+      {studentQuery.isLoading && (
+        <div className="mx-auto max-w-xl px-6 pb-16">
+          <div className="card p-6 space-y-4">
+            {[1, 2, 3].map((i) => <div key={i} className="h-6 skeleton rounded-lg" style={{ width: `${70 - i * 10}%` }} />)}
+          </div>
+        </div>
+      )}
+
+      {studentQuery.isSuccess && student && (
+        <section className="mx-auto max-w-2xl px-6 pb-20 animate-page">
+          <div className="card overflow-hidden">
+            {/* Top strip accent */}
+            <div className={`h-1 w-full ${isNegative ? 'bg-brand-danger' : 'bg-gradient-to-r from-brand-green to-brand-amber'}`} />
+
+            {/* Profile header */}
+            <div className="p-6 flex items-start justify-between gap-4">
+              <div className="space-y-2 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold tracking-widest text-brand-muted">{student.admissionNumber}</span>
-                  <span className="text-xs font-bold tracking-widest text-brand-muted">{formatClass(student.class)}</span>
+                  <span className="badge badge-muted">{student.admissionNumber}</span>
+                  <span className="badge badge-muted">{formatClass(student.class)}</span>
+                  {isNegative && <span className="badge badge-red">In Debt</span>}
                 </div>
-                <h2 className="font-display text-4xl font-black text-brand-dark leading-tight">{student.name}</h2>
-
-                {/* Balance chips */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <div className="rounded-xl border border-black/[0.07] bg-white px-4 py-2.5 min-w-[80px]">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-brand-muted mb-0.5">Total</p>
-                    <p className={`text-xl font-black ${Number(student.balance) < 0 ? 'text-brand-danger' : 'text-brand-dark'}`}>
-                      {currencyLabel(student.balance)}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-black/[0.07] bg-white px-4 py-2.5 min-w-[80px]">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-brand-muted mb-0.5">Credit</p>
-                    <p className="text-xl font-black text-brand-dark">{currencyLabel(student.totalCredit ?? 0)}</p>
-                  </div>
-                  <div className="rounded-xl border border-brand-danger/20 bg-brand-danger/5 px-4 py-2.5 min-w-[80px]">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-brand-danger mb-0.5">Debt</p>
-                    <p className="text-xl font-black text-brand-danger">
-                      {currencyLabel(Math.abs(Math.min(0, Number(student.balance))))}
-                    </p>
-                  </div>
-                </div>
+                <h2 className="font-display text-3xl font-extrabold text-brand-dark leading-tight mt-1">
+                  {student.name}
+                </h2>
               </div>
+              {/* Avatar */}
+              <div className="h-16 w-16 shrink-0 rounded-2xl bg-gradient-to-br from-brand-green to-brand-greenLight flex items-center justify-center shadow-md">
+                <span className="font-display text-xl font-black text-white">{student.name.charAt(0)}</span>
+              </div>
+            </div>
 
-              {/* Avatar placeholder */}
-              <div className="shrink-0 h-20 w-20 rounded-[1.25rem] bg-gradient-to-br from-brand-primarySoft to-brand-warm shadow-sm" />
+            {/* Balance stats */}
+            <div className="px-6 pb-6 grid grid-cols-3 gap-3">
+              {[
+                {
+                  label: 'Balance',
+                  value: currencyLabel(student.balance),
+                  icon: Wallet,
+                  color: isNegative ? 'text-brand-danger' : 'text-brand-green',
+                  bg:    isNegative ? 'bg-brand-dangerTint' : 'bg-brand-greenTint',
+                },
+                {
+                  label: 'Total Paid',
+                  value: currencyLabel(student.totalCredit ?? 0),
+                  icon: TrendingUp,
+                  color: 'text-brand-mid',
+                  bg:    'bg-brand-greenTint',
+                },
+                {
+                  label: 'Debt',
+                  value: currencyLabel(Math.abs(Math.min(0, Number(student.balance)))),
+                  icon: TrendingDown,
+                  color: 'text-brand-danger',
+                  bg:    'bg-brand-dangerTint',
+                },
+              ].map(({ label, value, icon: Icon, color, bg }) => (
+                <div key={label} className="stat-chip flex flex-col gap-1">
+                  <div className={`h-7 w-7 rounded-lg ${bg} flex items-center justify-center`}>
+                    <Icon size={13} className={color} />
+                  </div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-brand-subtle mt-1">{label}</p>
+                  <p className={`text-lg font-black ${color}`}>{value}</p>
+                </div>
+              ))}
             </div>
 
             {/* History */}
-            <div className="border-t border-black/[0.06] p-6">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-brand-primary">History</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-brand-muted">Total</span>
-                  <span className="text-xs font-medium text-brand-muted">·</span>
-                  <span className="text-xs font-medium text-brand-muted">Months</span>
-                  <div className="flex gap-1 ml-1">
-                    {MONTH_OPTIONS.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => setMonths(opt)}
-                        className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                          months === opt
-                            ? 'bg-brand-primary text-white'
-                            : 'bg-black/[0.05] text-brand-muted hover:bg-black/[0.09]'
-                        }`}
-                      >
-                        {opt >= 12 ? 'All' : opt}
-                      </button>
-                    ))}
-                  </div>
+            <div className="border-t border-brand-borderLight">
+              <div className="flex items-center justify-between px-6 py-4 flex-wrap gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-brand-green">Purchase History</p>
+                <div className="flex items-center gap-1.5">
+                  {MONTH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => setMonths(opt)}
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                        months === opt
+                          ? 'bg-brand-green text-white shadow-sm'
+                          : 'bg-brand-greenTint/70 text-brand-mid hover:bg-brand-greenMid'
+                      }`}
+                    >
+                      {opt >= 12 ? 'All' : `${opt}m`}
+                    </button>
+                  ))}
                   <button
                     onClick={() => studentQuery.refetch()}
-                    className="ml-1 p-1.5 rounded-full text-brand-muted hover:text-brand-dark hover:bg-black/[0.05] transition-colors"
+                    className="ml-1 h-7 w-7 flex items-center justify-center rounded-lg text-brand-subtle hover:text-brand-mid hover:bg-brand-greenTint transition-all"
                   >
-                    <RefreshCw size={13} />
+                    <RefreshCw size={12} />
                   </button>
                 </div>
               </div>
@@ -144,7 +170,7 @@ export default function Students() {
             </div>
           </div>
         </section>
-      ) : null}
+      )}
 
       <Footer />
     </div>

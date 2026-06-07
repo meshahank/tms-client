@@ -1,39 +1,62 @@
-import { useNavigate } from 'react-router-dom'
+import { Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import UserNavbar from '../../components/layout/UserNavbar'
 import Footer from '../../components/layout/Footer'
 import GradientBlob from '../../components/ui/GradientBlob'
-import { CLASS_CODES } from '../../lib/constants'
+import { useClasses } from '../../hooks/useClasses'
+import { formatClass } from '../../lib/formatters'
 
 export default function Classes() {
-  const navigate = useNavigate()
+  const { data: classes = [], isLoading } = useClasses()
 
   return (
     <div className="min-h-screen">
       <UserNavbar />
 
-      <main className="relative mx-auto max-w-6xl px-6 py-12">
-        <GradientBlob className="left-[-4rem] top-0 h-64 w-64 opacity-40" />
-        <GradientBlob className="right-[-3rem] bottom-0 h-56 w-56 opacity-30" />
+      {/* Hero */}
+      <section className="relative overflow-hidden py-16 text-center">
+        <GradientBlob className="left-[-6rem] top-0 h-72 w-72 opacity-60" />
+        <GradientBlob className="right-[-5rem] bottom-0 h-64 w-64 opacity-40" amber />
 
-        <div className="relative">
-          <h1 className="font-display text-5xl font-black text-brand-dark mb-8">Classes</h1>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {CLASS_CODES.map((code) => (
-              <button
-                key={code}
-                onClick={() => navigate(`/classes/${code}`)}
-                className="group relative overflow-hidden rounded-[1.4rem] bg-white border border-black/[0.07] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-28 flex flex-col justify-between p-4"
-              >
-                {/* Subtle orange corner accent */}
-                <div className="absolute right-0 top-0 h-14 w-14 rounded-bl-[2rem] bg-gradient-to-br from-brand-primaryTint to-transparent opacity-70" />
-                <p className="font-display text-3xl font-black text-brand-dark leading-none">{code}</p>
-                <div className="h-[3px] w-10 rounded-full bg-gradient-to-r from-brand-primarySoft to-brand-primary transition-all duration-300 group-hover:w-14" />
-              </button>
-            ))}
-          </div>
+        <div className="relative mx-auto max-w-xl px-6 animate-page">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-brand-green mb-3">Browse All</p>
+          <h1 className="font-display text-[3.5rem] sm:text-[4.5rem] font-extrabold leading-[0.9] text-brand-dark mb-4">
+            Classes
+          </h1>
+          <p className="text-base text-brand-muted max-w-sm mx-auto leading-relaxed">
+            Select a class to view the student list and individual balances.
+          </p>
         </div>
-      </main>
+      </section>
+
+      {/* Grid */}
+      <section className="mx-auto max-w-5xl px-6 pb-20">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-stagger">
+          {isLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-32 skeleton rounded-2xl" />
+              ))
+            : classes.map((cls) => (
+                <Link
+                  key={cls._id ?? cls.name}
+                  to={`/classes/${encodeURIComponent(cls.name ?? cls)}`}
+                  className="group card card-hover flex flex-col items-center justify-center gap-3 py-8 text-center"
+                >
+                  <div className="h-12 w-12 rounded-2xl bg-brand-greenTint flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-110">
+                    <Users size={20} className="text-brand-green" />
+                  </div>
+                  <p className="font-semibold text-brand-dark">{formatClass(cls.name ?? cls)}</p>
+                  {cls.studentCount != null && (
+                    <p className="text-[11px] text-brand-subtle">{cls.studentCount} students</p>
+                  )}
+                </Link>
+              ))}
+        </div>
+
+        {!isLoading && classes.length === 0 && (
+          <div className="py-20 text-center text-sm text-brand-subtle">No classes found.</div>
+        )}
+      </section>
 
       <Footer />
     </div>

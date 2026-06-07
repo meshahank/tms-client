@@ -1,81 +1,106 @@
 import { Link, NavLink } from 'react-router-dom'
-import { LogOut, ChevronDown } from 'lucide-react'
+import { LogOut, ChevronDown, LayoutDashboard, Users, ShoppingCart, UtensilsCrossed, BarChart2, TrendingDown } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthStore } from '../../store/authStore'
 
-const linkClass = ({ isActive }) =>
-  `px-4 py-1.5 text-sm font-medium rounded-full transition-colors ${
-    isActive
-      ? 'bg-brand-primary text-white'
-      : 'text-brand-dark/70 hover:text-brand-dark'
-  }`
+const NAV = [
+  { to: '/admin',          label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/students', label: 'Students',  icon: Users },
+  { to: '/admin/sale',     label: 'Sale',       icon: ShoppingCart },
+  { to: '/admin/menu',     label: 'Menu',       icon: UtensilsCrossed },
+]
+const MORE_NAV = [
+  { to: '/admin/reports', label: 'Reports',   icon: BarChart2 },
+  { to: '/admin/debt',    label: 'Debt View', icon: TrendingDown },
+]
 
 export default function AdminNavbar() {
-  const admin = useAuthStore((state) => state.admin)
-  const logout = useAuthStore((state) => state.logout)
-  const [moreOpen, setMoreOpen] = useState(false)
+  const admin   = useAuthStore((s) => s.admin)
+  const logout  = useAuthStore((s) => s.logout)
+  const [open, setOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-black/[0.06]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-        <Link to="/admin" className="font-display text-base font-bold text-brand-dark tracking-tight">
-          <span className="text-brand-primary">Tea</span>petti
+    <header className="sticky top-0 z-40 bg-brand-dark/98 backdrop-blur-xl border-b border-white/[0.06]">
+      <div className="h-[2.5px] w-full bg-gradient-to-r from-brand-green via-brand-amber to-brand-green opacity-60" />
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 h-14">
+        {/* Logo */}
+        <Link to="/admin" className="font-display text-[15px] font-bold flex items-center gap-1">
+          <span className="text-brand-amber">Tea</span>
+          <span className="text-white">petti</span>
+          <span className="ml-2 text-[10px] font-semibold tracking-widest uppercase text-white/30 border border-white/10 rounded px-1.5 py-0.5 leading-none">Admin</span>
         </Link>
 
-        <nav className="flex items-center gap-1">
-          <NavLink to="/admin" className={linkClass} end>Home</NavLink>
-          <NavLink to="/admin/students" className={linkClass}>Students</NavLink>
-          <NavLink to="/admin/sale" className={linkClass}>Sale</NavLink>
-          <NavLink to="/admin/menu" className={linkClass}>Menu</NavLink>
+        {/* Nav */}
+        <nav className="flex items-center gap-0.5">
+          {NAV.map(({ to, label, icon: Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/50 hover:text-white/85 hover:bg-white/[0.06]'
+                }`
+              }
+            >
+              <Icon size={13} />
+              {label}
+            </NavLink>
+          ))}
 
           {/* More dropdown */}
           <div className="relative">
             <button
               type="button"
-              onClick={() => setMoreOpen((v) => !v)}
-              className="flex items-center gap-1 px-4 py-1.5 text-sm font-medium text-brand-dark/70 hover:text-brand-dark rounded-full transition-colors"
+              onClick={() => setOpen((v) => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-white/50 hover:text-white/85 hover:bg-white/[0.06] rounded-lg transition-all duration-200"
             >
               More
-              <ChevronDown size={13} className={`transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
             </button>
-            {moreOpen && (
+            {open && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
-                <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-2xl border border-black/[0.08] bg-white shadow-float py-1.5">
-                  <NavLink
-                    to="/admin/reports"
-                    onClick={() => setMoreOpen(false)}
-                    className={({ isActive }) =>
-                      `block px-4 py-2 text-sm font-medium transition-colors ${isActive ? 'text-brand-primary' : 'text-brand-dark hover:bg-black/[0.04]'}`
-                    }
-                  >
-                    Reports
-                  </NavLink>
-                  <NavLink
-                    to="/admin/debt"
-                    onClick={() => setMoreOpen(false)}
-                    className={({ isActive }) =>
-                      `block px-4 py-2 text-sm font-medium transition-colors ${isActive ? 'text-brand-primary' : 'text-brand-dark hover:bg-black/[0.04]'}`
-                    }
-                  >
-                    Debt View
-                  </NavLink>
+                <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-white/10 bg-brand-dark shadow-2xl overflow-hidden">
+                  <div className="p-1">
+                    {MORE_NAV.map(({ to, label, icon: Icon }) => (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        onClick={() => setOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-colors ${
+                            isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
+                          }`
+                        }
+                      >
+                        <Icon size={13} />
+                        {label}
+                      </NavLink>
+                    ))}
+                  </div>
                 </div>
               </>
             )}
           </div>
         </nav>
 
+        {/* Right side */}
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-brand-muted hidden sm:block">
-            {admin?.username ?? 'Admin'}
-          </span>
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-brand-green/80 flex items-center justify-center">
+              <span className="text-[10px] font-bold text-white uppercase">{(admin?.username ?? 'A')[0]}</span>
+            </div>
+            <span className="text-[13px] font-medium text-white/50">{admin?.username ?? 'Admin'}</span>
+          </div>
           <button
             onClick={logout}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-muted hover:text-brand-dark transition-colors"
+            className="flex items-center gap-1.5 text-[13px] font-medium text-white/40 hover:text-white/80 transition-colors"
           >
-            <LogOut size={14} />
-            Logout
+            <LogOut size={13} />
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
